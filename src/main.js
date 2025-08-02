@@ -19,7 +19,8 @@ let totalHits = 0;
 
 form.addEventListener('submit', async evt => {
   evt.preventDefault();
-  currentQuery = form.searchText.value.trim();
+  currentQuery = form.elements['search-text'].value.trim();
+
   if (!currentQuery) {
     iziToast.warning({
       title: 'Warning',
@@ -28,6 +29,7 @@ form.addEventListener('submit', async evt => {
     });
     return;
   }
+
   currentPage = 1;
   clearGallery();
   hideLoadMoreButton();
@@ -46,6 +48,7 @@ async function fetchAndRender(isLoadMore = false) {
     const data = await getImagesByQuery(currentQuery, currentPage);
     const { hits, totalHits: total } = data;
     totalHits = total;
+
     if (hits.length === 0) {
       iziToast.info({
         title: 'No results',
@@ -56,7 +59,9 @@ async function fetchAndRender(isLoadMore = false) {
       hideLoadMoreButton();
       return;
     }
+
     createGallery(hits);
+
     if (currentPage * 15 < totalHits) {
       showLoadMoreButton();
     } else {
@@ -67,6 +72,7 @@ async function fetchAndRender(isLoadMore = false) {
         position: 'topRight',
       });
     }
+
     if (isLoadMore) smoothScroll();
   } catch (error) {
     console.error(error);
