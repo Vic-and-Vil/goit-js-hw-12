@@ -11,87 +11,37 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
 const form = document.querySelector('.form');
-const loadMoreBtn = document.querySelector('.load-more-btn');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
 
-let currentQuery = '';
-let currentPage = 1;
-let totalHits = 0;
+  const query = e.target.elements['search-text'].value.trim();
 
-form.addEventListener('submit', async evt => {
-  evt.preventDefault();
-  currentQuery = form.elements['search-text'].value.trim();
-
-  if (!currentQuery) {
+  if (!query) {
     iziToast.warning({
-      title: 'Warning',
-      message: 'Please enter a search term',
-      position: 'topRight',
+      message: 'Please enter a search term!',
     });
     return;
   }
 
-  currentPage = 1;
   clearGallery();
-  hideLoadMoreButton();
-  await fetchAndRender();
-  form.reset();
-});
-
-loadMoreBtn.addEventListener('click', async () => {
-  currentPage += 1;
-  await fetchAndRender(true);
-});
-
-async function fetchAndRender(isLoadMore = false) {
   showLoader();
+
   try {
-    const data = await getImagesByQuery(currentQuery, currentPage);
-    const { hits, totalHits: total } = data;
-    totalHits = total;
+    const data = await getImagesByQuery(query);
 
-    if (hits.length === 0) {
+    if (data.hits.length === 0) {
       iziToast.info({
-        title: 'No results',
         message:
-          "Sorry, there are no images matching your search query. Please try again!",
-        position: 'topRight',
+          'Sorry, there are no images matching your search query. Please try again!',
       });
-      hideLoadMoreButton();
-      return;
-    }
-
-    createGallery(hits);
-
-    if (currentPage * 15 < totalHits) {
-      showLoadMoreButton();
     } else {
-      hideLoadMoreButton();
-      iziToast.info({
-        title: 'End of results',
-        message: "We're sorry, but you've reached the end of search results.",
-        position: 'topRight',
-      });
+      createGallery(data.hits);
     }
-
-    if (isLoadMore) smoothScroll();
   } catch (error) {
-    console.error(error);
     iziToast.error({
-      title: 'Error',
       message: 'Something went wrong. Try again later.',
-      position: 'topRight',
     });
   } finally {
     hideLoader();
   }
-}
-
-function smoothScroll() {
-  const firstCard = document.querySelector('.gallery .gallery-item');
-  if (!firstCard) return;
-  const { height } = firstCard.getBoundingClientRect();
-  window.scrollBy({
-    top: 2 * height,
-    behavior: 'smooth',
-  });
-}
+});
